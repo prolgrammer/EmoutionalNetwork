@@ -1,4 +1,5 @@
 import threading
+import time
 import cv2
 from src.camera import CameraCapture
 from src.detection import detect_faces, draw_annotations
@@ -11,29 +12,32 @@ def main():
     history = EmotionHistory(50)
     gui = EmotionGUI()
     running = True
+    last_analysis = time.time()
+    interval = 0.3
 
-    def analyze_thread():
-        nonlocal running
+    def analyze():
+        nonlocal running, last_analysis
         while running:
-            frame = cam.get_frame()
-            if frame is None:
-                continue
-            faces = detect_faces(frame)
-            emo_list = []
-            for (t,r,b,l) in faces:
-                face_img = frame[t:b, l:r]
-                emo = analyze_emotions(face_img)
-                if emo:
-                    emo_list.append(emo)
-            if emo_list:
-                # average
-                avg = {}
-                for k in emo_list[0]:
-                    avg[k] = sum(d[k] for d in emo_list) / len(emo_list)
-                history.add(avg)
-            cv2.waitKey(100)  # small delay
+            if time.time() - last_analysis >= interval:
+                frame = cam.get_frame()
+                if frame is None:
+                    continue
+                faces = detect_faces(frame)
+                emo_list = []
+                for (t,r,b,l) in faces:
+                    face_img = frame[t:b, l:r]
+                    emo = analyze_emotions(face_img)
+                    if emo:
+                        emo_list.append(emo)
+                if emo_list:
+                    avg = {}
+                    for k in emo_list[0]:
+                        avg[k] = sum(d[k] for d in emo_list) / len(emo_list)
+                    history.add(avg)
+                last_analysis = time.time()
+            time.sleep(0.05)
 
-    thread = threading.Thread(target=analyze_thread, daemon=True)
+    thread = threading.Thread(target=analyze, daemon=True)
     thread.start()
 
     while running:
@@ -53,7 +57,7 @@ def main():
     if len(history) > 0:
         gui.show_chart(history.get_average())
     else:
-        print("No emotions recorded")
+        gui.show_message("No faces detected")
 
 if __name__ == '__main__':
     main()
