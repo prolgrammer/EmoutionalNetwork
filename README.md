@@ -1,36 +1,104 @@
-# Emotional Recognition Project
+# Emotion Analysis Application
 
-Проект для распознавания эмоций с веб-камеры в реальном времени.  
-Разработан в рамках двухнедельного спринта командой из двух разработчиков.
+<div align="center">
+Приложение для анализа эмоций человека в реальном времени
+</div>
 
-## 📋 Описание
+---
 
-Приложение захватывает видео с веб-камеры, обнаруживает лица, определяет эмоции для каждого лица (гнев, отвращение, страх, радость, грусть, удивление, нейтрально) и отображает доминирующую эмоцию над лицом. По окончании сессии строится круговая диаграмма, показывающая распределение эмоций за всё время наблюдения.
+## 🚀 Установка и запуск
 
-**Функциональность текущей версии (Спринт 1):**
-- Захват видео с камеры (OpenCV)
-- Детекция лиц с масштабированием для ускорения (face_recognition)
-- Анализ эмоций (FER)
-- Отображение видео с аннотациями (прямоугольники и текст)
-- Сбор статистики эмоций в очередь (последние 50 измерений)
-- Интерфейс tkinter с кнопкой «Back» для остановки записи
-- Построение круговой диаграммы средних эмоций (matplotlib)
-- Сохранение диаграммы в PNG
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
-## 🛠 Технологии
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- Python 3.8+
-- OpenCV
-- face_recognition (dlib)
-- FER (TensorFlow backend)
-- Matplotlib
-- Tkinter (встроен в Python)
-- NumPy
-- Pillow
+---
 
-## 🚀 Установка
+## 🔌 API Endpoints
 
-1. **Клонируйте репозиторий:**
-   ```bash
-   git clone https://github.com/your-repo/emotional-recognition.git
-   cd emotional-recognition
+### 📸 POST /analyze
+
+Анализирует изображение и возвращает эмоции.
+
+#### Request (multipart/form-data)
+
+| Параметр    | Тип    | Обязательный | Описание |
+|------------|--------|-------------|----------|
+| file       | file   | ✅          | Изображение |
+| session_id | string | ❌          | ID сессии |
+| accumulate | bool   | ❌          | Накопление |
+
+#### Response
+
+```json
+{
+  "dominant": "happiness",
+  "emotions": {
+    "neutral": 0.02,
+    "happiness": 0.77,
+    "sadness": 0.01,
+    "anger": 0.00,
+    "surprise": 0.17,
+    "fear": 0.02,
+    "disgust": 0.01
+  },
+  "faces_count": 1,
+  "confidence": 0.77
+}
+```
+
+---
+
+### 🧹 POST /clear_session/{session_id}
+
+Очищает историю сессии.
+
+```json
+{
+  "status": "cleared"
+}
+```
+
+---
+
+## 📁 Структура проекта
+
+```text
+emotion-analysis/
+├── backend/
+│   ├── main.py                # FastAPI приложение
+│   └── requirements.txt       # Python-зависимости
+├── frontend/
+│   ├── src/
+│   │   ├── api/               # (удалён моковый API)
+│   │   ├── components/        # React-компоненты
+│   │   │   ├── EmotionDisplay.tsx
+│   │   │   ├── EmotionInsight.tsx
+│   │   │   ├── StatisticsPanel.tsx
+│   │   │   ├── VideoPlayer.tsx
+│   │   │   ├── VideoSourceSelector.tsx
+│   │   │   └── Settings.tsx
+│   │   ├── hooks/             # кастомные хуки
+│   │   │   ├── useVideoStream.ts
+│   │   │   └── useEmotionAnalysis.ts
+│   │   ├── types/             # TypeScript-типы
+│   │   │   └── emotion.ts
+│   │   ├── App.tsx            # корневой компонент
+│   │   └── main.tsx           # точка входа
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.ts
+└── README.md
+```
+
+---
